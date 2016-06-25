@@ -1,0 +1,42 @@
+#!/usr/bin/python
+
+import os,fileinput,time
+
+
+def main():
+	#os.system('./compare')
+	name_exec()
+	
+
+def name_exec():
+	ip=raw_input('Enter the ip of namenode')  #ip of name node is entered
+	os.system('./secondary_namenode_setup')  #secondary namenode setup script is executed
+	temp=open('name_node','r+')             #1.name_node script opened
+	t=open('data_node','r+')                #2.datanode script opened
+	sn=open('secondary_name_node','r+')     #3.secondary_name_node script opened
+	strt=open('start_services','r+')        #4.start_services script opened
+	con=open('hadoop_console','r+')         #5.hadoop_console script opened
+	for line in fileinput.input('name_node'):      #1.namenode script
+		temp.write(line.replace("<name_node_ip>",ip))
+	temp.close()
+	for line in fileinput.input('data_node'):      #2.datanode script
+		t.write(line.replace("<name_node_ip>",ip))
+	t.close()
+	for line in fileinput.input('secondary_name_node'): #3.secondary namenode script
+		sn.write(line.replace("<name_node_ip>",ip))
+	sn.close()
+	for line in fileinput.input('start_services'):   #4.start services script
+		strt.write(line.replace("<name_node_ip>",ip))
+	strt.close()
+	for line in fileinput.input('hadoop_console'):   #5.hadoop console script
+		con.write(line.replace("<name_node_ip>",ip))
+	con.close()
+	temp=open('hosts.txt','r+')   #namenode ip is removed from the hosts file to avoid future conflicts
+	for line in fileinput.input('hosts.txt'):
+		temp.write(line.replace(ip,''))
+	temp.close()
+	os.system('sshpass -p \'redhat\' scp name_node hosts.txt root@'+ip+':/bin/')
+	os.system('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no root@'+ip+' name_node')
+	print 'namenode configured!!'
+	
+main()

@@ -1,0 +1,123 @@
+#!/usr/bin/python
+import os,time,fileinput
+
+def main():
+	
+	hdfs_xml()
+	core_xml()
+	mapred_xml()
+	namenode_format()
+	keygen()
+	
+
+
+
+
+
+def hdfs_xml():
+	enter='<configuration>\n \
+	<property>\n \
+	<name>dfs.name.dir</name>\n \
+	<value>/namenode</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/hdfs-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/hdfs-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+	
+	
+	
+def core_xml():
+	ip_name='<name_node_ip>'
+	change='<configuration>\n \
+	<property>\n \
+	<name>fs.default.name</name>\n \
+	<value>hdfs://'+ip_name+':10001</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/core-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/core-site.xml'):
+		temp.write(line.replace('<configuration>',change))
+	temp.close()
+	
+	
+	
+def mapred_xml():
+	ip_name='<name_node_ip>'
+	enter='<configuration>\n \
+	<property>\n \
+	<name>mapred.job.tracker</name>\n \
+	<value>'+ip_name+':9001</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/mapred-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/mapred-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+	
+
+def namenode_format():
+	os.system('hadoop namenode -format')
+
+
+
+def keygen():
+	os.system('rm -rvf /root/.ssh/*')
+	os.system('ssh-keygen')
+	os.system('yum install sshpass nmap -y')
+	os.system('nmap -n 192.168.0.0/24 | grep -i Nmap\ scan > temphosts.txt')
+	os.system('cut -d" " -f5 temphosts.txt > hosts.txt')
+	tmp=open('hosts.txt','r')
+	v=tmp.read()
+	x=v.split('\n')
+	for line in x:
+		os.system('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no '+line+' echo')
+		os.system('sshpass -p \'redhat\' ssh-copy-id '+line)
+		print line+'done!!'
+		
+		
+	tmp.close()
+	
+	
+def slaves():
+	tmp=open('hosts.txt','r')
+	os.system('echo > /etc/hadoop/slaves')
+	slv=open('/etc/hadoop/slaves','a')
+	v=tmp.read()
+	x=v.split('\n')
+	for line in x:
+		slv.write(line)
+		print line+'done!!'
+	tmp.close()
+	slv.close()
+	
+
+
+
+
+main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

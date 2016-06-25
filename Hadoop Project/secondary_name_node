@@ -1,0 +1,49 @@
+#!/usr/bin/python
+import os,fileinput
+
+
+def main():
+	core()
+	hdfs()
+	
+#core-site.xml is configured
+def core():
+	ip='<name_node_ip>' #this will be replaced by namenode ip by the namenode setup script
+	change='<configuration>\n \
+	<property>/n \
+	<name>fs.default.name</name>\n \
+	<value>hdfs://'+ip+':10001</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/core-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/core-site.xml'):
+		temp.write(line.replace('<configuration>',change))
+	temp.close()
+	
+#hdfs-site.xml is configured	
+def hdfs():
+	ip='<name_node_ip>'
+	snnip='<ip_of_snn>' #this will be replaced by secondary namenode ip by the secondary namenode setup script
+	enter='<configuration>\n \
+	<property>\n \
+	<name>dfs.http.address</name>\n \
+	<value>'+ip+':50070</value>\n \
+	</property>\n \
+	<property>\n \
+	<name>dfs.secondary.http.address</name>\n \
+	<value>'+snnip+':50090</value>\n \
+	</property>\n \
+	<property>\n \
+	<name>fs.checkpoint.dir</name>\n \
+	<value>/data/check</value>\n \
+	</property>\n \
+	<property>\n \
+	<name>fs.checkpoint.edits.dir</name>\n \
+	<value>/data/edits</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/hdfs-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/hdfs-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+		
+main()	
+	

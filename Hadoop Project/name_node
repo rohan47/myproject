@@ -1,0 +1,99 @@
+#!/usr/bin/python
+import os,time,fileinput
+
+def main():
+	
+	hdfs_xml()
+	core_xml()
+	mapred_xml()
+	namenode_format()
+	keygen()
+	
+#hdfs-site.xml is configured	
+def hdfs_xml():
+	enter='<configuration>\n \
+	<property>\n \
+	<name>dfs.name.dir</name>\n \
+	<value>/namenode</value>\n \
+	</property>\n \
+	<property>\n \
+	<name>dfs.block.size</name>\n \
+	<value>33554432</value>\n \
+	</property>\n \
+	<property>\n \
+	<name>dfs.replication</name>\n \
+	<value>2</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/hdfs-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/hdfs-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+	
+	
+#core-site.xml is configured
+def core_xml():
+	ip_name='<name_node_ip>'   #this will be replaced by namenode ip by the namenode setup script
+	change='<configuration>\n \
+	<property>\n \
+	<name>fs.default.name</name>\n \
+	<value>hdfs://'+ip_name+':10001</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/core-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/core-site.xml'):
+		temp.write(line.replace('<configuration>',change))
+	temp.close()
+	
+	
+#mapred-site.xml is configured
+def mapred_xml():
+	ip_name='<name_node_ip>'  #this will be replaced by namenode ip by the namenode setup script
+	enter='<configuration>\n \
+	<property>\n \
+	<name>mapred.job.tracker</name>\n \
+	<value>'+ip_name+':9001</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/mapred-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/mapred-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+	
+#namenode is formated
+def namenode_format():
+	os.system('hadoop namenode -format')
+	os.system('hadoop-daemon.sh start namenode')
+	os.system('hadoop-daemon.sh start jobtracker')
+
+#ssh key is generated and distributed to all systems detected by nmap
+def keygen():
+	os.system('rm -rvf /root/.ssh/*')
+	os.system('ssh-keygen')
+	os.system('yum install sshpass nmap -y')
+	os.system('nmap -p 22 -n 192.168.0.10-80 | grep -i Nmap\ scan > tempkeyhosts.txt')
+	os.system('cut -d" " -f5 temphosts.txt > keyhosts.txt')
+	tmp=open('keyhosts.txt','r')
+	v=tmp.read()
+	x=v.split('\n')
+	for line in x:
+		os.system('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no '+line+' echo') #system is added to list of known hosts
+		os.system('sshpass -p \'redhat\' ssh-copy-id '+line)  #ssh key is copied to all systems
+		print line+'done!!'
+	tmp.close()
+	
+#slaves and master files are setup
+def slaves():
+	sip='<ip_of_snn>' #this will be replaced by secondary namenode ip by the secondary namenode setup script
+	tmp=open('hosts.txt','r') #hosts file opened
+	os.system('echo > /etc/hadoop/slaves') #slaves file is emptied
+	slv=open('/etc/hadoop/slaves','a') #slaves file is opened
+	os.system('echo > /etc/hadoop/masters') #masters file is emptied
+	os.system('echo '+sip+'> /etc/hadoop/masters') #secondary namenode ip is stored in masters file
+	v=tmp.read()
+	x=v.split('\n')
+	for line in x:
+		slv.write(line)
+		print line+'added!!'
+	tmp.close()
+	slv.close()
+	os.system('hadoop-daemon.sh --hosts masters start secondarynamenode')
+	
+main()

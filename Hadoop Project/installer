@@ -1,0 +1,37 @@
+#!/usr/bin/python
+import os,time,fileinput
+
+def main():
+	jdkandhadoop()
+	path_copy()
+	path_terminal()
+	path_hadoop()
+
+#jdk and hadoop are installed
+def jdkandhadoop():
+	print 'Jdk and Hadoop are being installed'
+	os.system('yum install jdk hadoop -y')
+	
+#path of jdk is set in the current terminal 
+def path_copy():
+	os.system('JAVA_HOME=/usr/java/jdk1.7.0_51/')
+	os.system('PATH=$JAVA_HOME/bin:$PATH:$HOME/bin')
+	
+#jdk path is set in the .bash_profile file
+def path_terminal():
+	jdk_path=path_copy()
+	path='export JAVA_HOME=/usr/java/jdk1.7.0_51/\nPATH=$JAVA_HOME/bin:$PATH:$HOME/bin\nexport PATH'
+	path_prmnt=open('/root/.bash_profile','a')
+	path_prmnt.write(path)
+	path_prmnt.close()
+	
+#jdk path is set in hadoop configuration file(hadoop-env.sh)
+def path_hadoop():
+	jdk_path=path_copy()
+	hdpth='export JAVA_HOME=/usr/java/jdk1.7.0_51/'
+	hadooppath=open('/etc/hadoop/hadoop-env.sh','r+')
+	for line in fileinput.input('/etc/hadoop/hadoop-env.sh') :
+		hadooppath.write(line.replace('export JAVA_HOME=/usr/java/default',hdpth))
+	hadooppath.close()
+	
+main()

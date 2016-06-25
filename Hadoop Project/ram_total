@@ -1,0 +1,9 @@
+#!/usr/bin/python
+import commands
+
+def check_ram():
+	x=int(commands.getoutput('cat /proc/meminfo | grep MemTotal | awk \'{print $2}\''))
+	print x
+	
+	
+check_ram()

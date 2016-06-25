@@ -1,0 +1,52 @@
+#!/usr/bin/python
+import commands
+
+def main():
+	ram_info()
+	diff_ram()
+
+
+
+def ram_info():
+	f=open('hosts.txt','r')
+	v=f.read()
+	x=v.split('\n')
+	g=open('free_ram.txt','w')
+	for ip in x:
+		g.write(ip+':free>'+commands.getoutput('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no root@'+ip+' ram_free')+' :total>'+commands.getoutput('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no root@'+ip+' ram_total')+'\n')
+	f.close()
+	g.close()
+	
+	
+	
+	
+def diff_ram():
+	f=open('free_ram.txt','r')
+	slv=open('data_ip.txt','w')
+	
+	x=f.read().split('\n')
+	
+	max_full=0
+	max_free=0
+	for i in x:
+		ip=i.split(':')[0]
+		tot=int(i.split(':')[2].split('>')[1])
+		free=int(i.split(':')[1].split('>')[1])
+		y=str(free)
+		slv.write(ip+'\n')
+		if tot>max_full:
+			if free>max_free:
+				max_free=free
+				ip_name=ip
+				mm=open('name_node_ip.txt','w')
+				mm.write(ip_name+'\n')
+				mm.close()
+			max_full=tot		
+	slv.close()	
+	f.close()
+	
+	
+	
+	
+main()
+

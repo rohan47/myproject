@@ -1,0 +1,52 @@
+#!/usr/bin/python
+
+import os,time,fileinput
+
+def main():
+	print 'required tools are being installed on this system'
+	os.system('yum install nmap sshpass -y')#nmap and sshpass is installed on the current system
+	nmap()
+	ssh_login()
+	check=True
+	while check:
+		print 'Enter 1 for installation'
+		print 'Enter 2 to setup namenode, secondary namenode and jobtracker'
+		print 'Enter 3 to setup datanodes and tasktracker'
+		print 'Enter 4 to start namenode,datanode and mapreducer'
+		print 'Enter 5 to view status'
+		print 'Enter anything to exit'
+		a=int(raw_input('>'))
+		if a==1:
+			os.system('./hadoop_install')
+			
+		elif a==2:
+			os.system('./name_node_setup')
+			
+		elif a==3:
+			os.system('./data_node_setup')
+		elif a==4:
+			os.system('./start_services')
+		elif a==5:
+			os.system('./hadoop_console')
+		else :
+			check=False
+
+#this function will use nmap to scan systems on which port 22 is open for ssh
+def nmap():	
+	ip_range='192.168.0.10-80'                #raw_input('Enter the range of  ip')
+	os.system('nmap -p 22 -n '+ip_range+' | grep -i Nmap\ scan > temphosts.txt')
+	os.system('cut -d" " -f5 temphosts.txt > hosts.txt')
+	
+#the function bellow will disable selinux and flush firewall rules
+#it will then send the installer on all the systems scaned by nmap
+def ssh_login():
+	tmp=open('hosts.txt','r')
+	v=tmp.read()
+	x=v.split('\n')
+	for line in x:
+		os.system('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no root@'+line+' setenforce 0; iptables -F')
+		os.system('sshpass -p \'redhat\' scp installer ram_total ram_free root@'+line+':/bin/')
+		print line+'done!!'
+	tmp.close()
+	
+main()

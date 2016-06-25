@@ -1,0 +1,56 @@
+#!/usr/bin/python
+import os,time,fileinput
+
+def main():
+	hdfs_xml()
+	core_xml()
+	mapred_xml()
+	start()
+	
+#hdfs-site.xml is configured
+def hdfs_xml():
+	enter='<configuration>\n \
+	<property>\n \
+	<name>dfs.data.dir</name>\n \
+	<value>/datanode</value>\n \
+	</property>\n \
+	<property>\n \
+	<name>dfs.heartbeat.interval</name>\n \
+	<value>10</value>\n \
+	</property>\n '
+	temp=open('/etc/hadoop/hdfs-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/hdfs-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+	
+#core-site.xml is configured	
+def core_xml():
+	ip_name='<name_node_ip>' #this will be replaced by namenode ip by the namenode setup script
+	change='<configuration>\n \
+	<property>\n \
+	<name>fs.default.name</name>\n \
+	<value>hdfs://'+ip_name+':10001</value>\n \
+	</property>'
+	temp=open('/etc/hadoop/core-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/core-site.xml'):
+		temp.write(line.replace('<configuration>',change))
+	temp.close()
+
+#maped-site.xml is configured
+def mapred_xml():
+	ip_name='<name_node_ip>' #this will be replaced by namenode ip by the namenode setup script
+	enter='<configuration>\n \
+	<property>\n \
+	<name>mapred.job.tracker</name>\n \
+	<value>'+ip_name+':9001</value>\n \
+	</property>\n'
+	temp=open('/etc/hadoop/mapred-site.xml','r+')
+	for line in fileinput.input('/etc/hadoop/mapred-site.xml'):
+		temp.write(line.replace('<configuration>',enter))
+	temp.close()
+	
+def start():
+	os.system('hadoop-daemon.sh start datanode')
+	os.system('hadoop-daemon.sh start tasktracker')	
+	
+main()

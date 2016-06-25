@@ -1,0 +1,19 @@
+#!/usr/bin/python
+import os,time,fileinput
+
+def main():
+	start_hd()
+
+
+
+
+def start_hd():			
+	os.system('chmod 777 /usr/sbin/start-*')
+	os.system('chmod 777 /usr/sbin/slaves.sh')
+	os.system('sshpass -p \'redhat\' ssh -o StrictHostKeyChecking=no root@'+ip+' ./usr/sbin/start-all.sh')
+	
+	
+	
+	
+	
+main()
